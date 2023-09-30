@@ -13,8 +13,8 @@ import java.util.function.Function;
 
 @Component
 public class JwtUtil {
-    @Value("secret-text")
-    private static String SECRET_KEY;
+
+    private static String SECRET_KEY = "53crEt@text53crEt@text53crEt@text53crEt@text53crEt@text";
 
     private SecretKeySpec getSecretKeySpec(){
         SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
@@ -22,7 +22,7 @@ public class JwtUtil {
         return secretKeySpec;
     }
 
-    public String generateAccessToken(JwtToken jwtToken){
+    public String generateTokenString(JwtToken jwtToken){
         SecretKeySpec secretKeySpec = getSecretKeySpec();
         Map<String, Object> claims = new HashMap<>();
         return Jwts.builder()
@@ -35,18 +35,6 @@ public class JwtUtil {
                 .compact();
     }
 
-    public String generateRefreshToken(JwtToken jwtToken){
-        SecretKeySpec secretKeySpec = getSecretKeySpec();
-        Map<String, Object> claims = new HashMap<>();
-        return Jwts.builder()
-                .setClaims(claims)
-                .setIssuer(jwtToken.getIssuer())
-                .setSubject(jwtToken.getSubject())
-                .setIssuedAt(jwtToken.getIssuedAt())
-                .setExpiration(jwtToken.getExpireddAt())
-                .signWith(secretKeySpec)
-                .compact();
-    }
 
     public Boolean isTokenValid(String token){
         return getSubjectFromToken(token) != null;
