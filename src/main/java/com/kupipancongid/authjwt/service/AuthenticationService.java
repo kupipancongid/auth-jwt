@@ -77,6 +77,17 @@ public class AuthenticationService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public User getUserByToken(String accessToken){
+        if (accessToken==null){
+            return null;
+        }
+
+        String userId = jwtUtil.getIssuerFromToken(accessToken);
+        User user = userRepository.findById(userId).orElse(null);
+        return user;
+    }
+
 
 
 

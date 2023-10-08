@@ -19,7 +19,7 @@ public class AuthController {
     AuthenticationService authenticationService;
 
     @PostMapping(
-            path = "/register",
+            path = "/api/register",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
@@ -33,7 +33,7 @@ public class AuthController {
     }
 
     @PostMapping(
-            path = "/login",
+            path = "/api/login",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
