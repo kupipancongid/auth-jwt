@@ -5,10 +5,10 @@ import com.kupipancongid.authjwt.model.JwtToken;
 import com.kupipancongid.authjwt.model.request.LoginRequest;
 import com.kupipancongid.authjwt.model.request.RegisterRequest;
 import com.kupipancongid.authjwt.model.response.TokenResponse;
-import com.kupipancongid.authjwt.model.response.WebResponse;
 import com.kupipancongid.authjwt.repository.UserRepository;
 import com.kupipancongid.authjwt.security.BCrypt;
 import com.kupipancongid.authjwt.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -58,6 +58,54 @@ public class AuthenticationService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Login failed. wrong credentials.");
         }
     }
+
+    @Transactional
+    public TokenResponse refresh(HttpServletRequest request){
+        String refreshToken = request.getHeader("refresh_token");
+
+        if (refreshToken==null){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+
+        if (refreshToken.equals("")){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+
+        if (!jwtUtil.isTokenValid(refreshToken)){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+
+        if (jwtUtil.isTokenExpired(refreshToken)){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+        User user = getUserByToken(refreshToken);
+
+        if (!user.getRefreshToken().equals(refreshToken)){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+
+        if (user==null){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+
+        Date accessTokenIssuedAt = new Date(System.currentTimeMillis());
+        Date accessTokenExpiredAt = new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRED_TIMEMILIS);
+        Date refreshTokenExpiredAt = new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRED_TIMEMILIS);
+        JwtToken jwtAccessToken = new JwtToken(user.getId(), user.getName(), accessTokenIssuedAt,accessTokenExpiredAt);
+        String newAccessToken = jwtUtil.generateTokenString(jwtAccessToken);
+        JwtToken jwtRefreshToken = new JwtToken(user.getId(), user.getName(), accessTokenIssuedAt,refreshTokenExpiredAt);
+        String newRefreshToken = jwtUtil.generateTokenString(jwtRefreshToken);
+
+        user.setAccessToken(newAccessToken);
+        user.setRefreshToken(newRefreshToken);
+        userRepository.save(user);
+
+        return TokenResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .build();
+    }
+
 
     @Transactional
     public void register(RegisterRequest request){

@@ -5,6 +5,7 @@ import com.kupipancongid.authjwt.model.request.RegisterRequest;
 import com.kupipancongid.authjwt.model.response.TokenResponse;
 import com.kupipancongid.authjwt.model.response.WebResponse;
 import com.kupipancongid.authjwt.service.AuthenticationService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.antlr.v4.runtime.Token;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -41,6 +42,16 @@ public class AuthController {
             @RequestBody LoginRequest request
             ){
         TokenResponse tokenResponse = authenticationService.login(request);
+        return WebResponse.<TokenResponse>builder()
+                .data(tokenResponse)
+                .build();
+    }
+    @PostMapping(
+            path = "/api/refresh",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public WebResponse<TokenResponse> refresh(HttpServletRequest request){
+        TokenResponse tokenResponse = authenticationService.refresh(request);
         return WebResponse.<TokenResponse>builder()
                 .data(tokenResponse)
                 .build();

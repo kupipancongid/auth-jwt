@@ -51,7 +51,10 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
         if (!jwtUtil.isTokenValid(accessToken)){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
-        log.info(user.toString());
+
+        if (!user.getAccessToken().equals(accessToken)){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
         return user;
     }
 }
