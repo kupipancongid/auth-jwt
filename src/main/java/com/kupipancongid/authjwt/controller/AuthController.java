@@ -1,14 +1,15 @@
 package com.kupipancongid.authjwt.controller;
 
+import com.kupipancongid.authjwt.entity.User;
 import com.kupipancongid.authjwt.model.request.LoginRequest;
 import com.kupipancongid.authjwt.model.request.RegisterRequest;
 import com.kupipancongid.authjwt.model.response.TokenResponse;
 import com.kupipancongid.authjwt.model.response.WebResponse;
 import com.kupipancongid.authjwt.service.AuthenticationService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.antlr.v4.runtime.Token;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -57,6 +58,15 @@ public class AuthController {
                 .build();
     }
 
-
+    @DeleteMapping(
+            path = "/api/logout",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public WebResponse<String> logout(User user){
+        authenticationService.logout(user);
+        return WebResponse.<String>builder()
+                .data("OK")
+                .build();
+    }
 
 }

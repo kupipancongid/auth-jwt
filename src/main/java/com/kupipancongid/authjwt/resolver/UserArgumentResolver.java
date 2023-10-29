@@ -44,7 +44,7 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
 
-        User user = authenticationService.getUserByToken(accessToken);
+        User user = authenticationService.getUserByAccessToken(accessToken);
 
         if (!user.getAccessToken().equals(accessToken)){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");

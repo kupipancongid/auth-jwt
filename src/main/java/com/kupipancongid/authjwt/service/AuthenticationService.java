@@ -9,6 +9,7 @@ import com.kupipancongid.authjwt.repository.UserRepository;
 import com.kupipancongid.authjwt.security.BCrypt;
 import com.kupipancongid.authjwt.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Date;
 
+@Slf4j
 @Service
 public class AuthenticationService {
     @Autowired
@@ -63,10 +65,6 @@ public class AuthenticationService {
     public TokenResponse refresh(HttpServletRequest request){
         String refreshToken = request.getHeader("refresh_token");
 
-        if (jwtUtil.isTokenExpired(refreshToken)){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
-        }
-
         if (refreshToken==null){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -75,17 +73,22 @@ public class AuthenticationService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
 
+        if (jwtUtil.isTokenExpired(refreshToken)){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+
         if (!jwtUtil.isTokenValid(refreshToken)){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
 
-        User user = getUserByToken(refreshToken);
 
-        if (!user.getRefreshToken().equals(refreshToken)){
+        User user = getUserByRefreshToken(refreshToken);
+
+        if (user==null){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
 
-        if (user==null){
+        if (!user.getRefreshToken().equals(refreshToken)){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
 
@@ -127,17 +130,40 @@ public class AuthenticationService {
     }
 
     @Transactional(readOnly = true)
-    public User getUserByToken(String accessToken){
+    public User getUserByAccessToken(String accessToken){
         if (accessToken==null){
             return null;
         }
 
         String userId = jwtUtil.getIssuerFromToken(accessToken);
-        User user = userRepository.findById(userId).orElse(null);
+        User user = userRepository.findByAccessToken(accessToken).orElse(null);
+        if (!user.getId().equals(userId)){
+            return null;
+        }
         return user;
     }
 
+    @Transactional(readOnly = true)
+    public User getUserByRefreshToken(String refreshToken){
+        if (refreshToken==null){
+            return null;
+        }
 
+        String userId = jwtUtil.getIssuerFromToken(refreshToken);
+        User user = userRepository.findByRefreshToken(refreshToken).orElse(null);
+        if (!user.getId().equals(userId)){
+            return null;
+        }
+        return user;
+    }
+
+    @Transactional
+    public void logout(User user){
+        user.setAccessToken(null);
+        user.setRefreshToken(null);
+
+        userRepository.save(user);
+    }
 
 
 }
