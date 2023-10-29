@@ -63,6 +63,10 @@ public class AuthenticationService {
     public TokenResponse refresh(HttpServletRequest request){
         String refreshToken = request.getHeader("refresh_token");
 
+        if (jwtUtil.isTokenExpired(refreshToken)){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+
         if (refreshToken==null){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -75,9 +79,6 @@ public class AuthenticationService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
 
-        if (jwtUtil.isTokenExpired(refreshToken)){
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
-        }
         User user = getUserByToken(refreshToken);
 
         if (!user.getRefreshToken().equals(refreshToken)){
